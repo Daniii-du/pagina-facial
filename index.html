@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaceID - Reconocimiento Facial</title>
+    <!-- FontAwesome para iconos de redes sociales y seguridad -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#2563EB',
+                        brandBlueHover: '#1D4ED8',
+                        brandCyan: '#06B6D4',
+                        brandGreen: '#10B981',
+                        darkBg: '#0B0F17',
+                        cardBg: '#111827',
+                        macBorder: '#1F2937',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030712;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Marcos HUD para la imagen de reconocimiento facial */
+        .hud-corner {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-color: #06B6D4;
+            border-style: solid;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .hud-tl { top: 12px; left: 12px; border-width: 3px 0 0 3px; }
+        .hud-tr { top: 12px; right: 12px; border-width: 3px 3px 0 0; }
+        .hud-bl { bottom: 12px; left: 12px; border-width: 0 0 3px 3px; }
+        .hud-br { bottom: 12px; right: 12px; border-width: 0 3px 3px 0; }
+
+        /* Efecto de marco de ventana macOS */
+        .mac-window {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+        }
+
+        /* SVG overlay de red de puntos faciales */
+        .mesh-overlay {
+            background-image: radial-gradient(#06B6D4 1px, transparent 1px);
+            background-size: 16px 16px;
+            opacity: 0.25;
+        }
+
+        /* Transiciones de botones */
+        .btn-glow {
+            transition: all 0.3s ease;
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-6 bg-slate-950">
+
+    <!-- Ventana Principal estilo macOS -->
+    <div class="mac-window w-full max-w-5xl bg-cardBg rounded-xl overflow-hidden border border-macBorder flex flex-col my-auto">
+        
+        <!-- Barra de título macOS -->
+        <div class="bg-[#161F30] px-4 py-3 flex items-center justify-between border-b border-macBorder select-none">
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+            </div>
+            <div class="text-xs text-gray-400 font-medium text-center flex-1 pr-12">
+                Vista previa del resultado final
+            </div>
+        </div>
+
+        <!-- Contenido principal de la página -->
+        <div class="flex-1 flex flex-col bg-cardBg">
+            
+            <!-- Navbar Header -->
+            <header class="px-6 md:px-10 py-5 flex items-center justify-between border-b border-slate-800/60">
+                <!-- Logo -->
+                <a href="#" class="flex items-center space-x-3 group">
+                    <div class="text-brandGreen text-2xl group-hover:scale-105 transition-transform">
+                        <!-- Icono personalizado FaceID -->
+                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 3H5a2 2 0 0 0-2 2v4"></path>
+                            <path d="M15 3h4a2 2 0 0 1 2 2v4"></path>
+                            <path d="M9 21H5a2 2 0 0 1-2-2v-4"></path>
+                            <path d="M15 21h4a2 2 0 0 0 2-2v-4"></path>
+                            <path d="M9 10h.01"></path>
+                            <path d="M15 10h.01"></path>
+                            <path d="M12 14a2 2 0 0 1-2-2"></path>
+                            <path d="M10 17a4 4 0 0 0 4 0"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-white">FaceID</span>
+                </a>
+
+                <!-- Nav Menu Links -->
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-300">
+                    <a href="#inicio" class="hover:text-white transition-colors">Inicio</a>
+                    <a href="#servicios" class="hover:text-white transition-colors">Servicios</a>
+                    <a href="#contacto" class="hover:text-white transition-colors">Contacto</a>
+                </nav>
+
+                <!-- Botón Iniciar Sesión -->
+                <div>
+                    <a href="#login" class="bg-brandBlue hover:bg-brandBlueHover text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 btn-glow inline-block">
+                        Iniciar Sesión
+                    </a>
+                </div>
+            </header>
+
+            <!-- Sección Hero -->
+            <section id="inicio" class="relative px-6 md:px-12 py-12 md:py-16 bg-gradient-to-b from-[#0B0F17] to-cardBg border-b border-slate-800/80">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    
+                    <!-- Lado Izquierdo: Textos -->
+                    <div class="space-y-6 max-w-md">
+                        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight">
+                            Reconocimiento Facial
+                        </h1>
+                        <p class="text-gray-400 text-sm sm:text-base leading-relaxed">
+                            Tecnología que identifica rostros de forma rápida, segura y precisa.
+                        </p>
+                        <div class="pt-2">
+                            <a href="#mas" class="bg-brandBlue hover:bg-brandBlueHover text-white px-7 py-3 rounded-full text-sm font-semibold transition-all duration-200 btn-glow inline-block">
+                                Conoce más
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Lado Derecho: Imagen con Grid HUD Facial -->
+                    <div class="flex justify-center md:justify-end">
+                        <div class="relative w-full max-w-[340px] aspect-square rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl shadow-cyan-900/20 group">
+                            <!-- Esquinas HUD -->
+                            <div class="hud-corner hud-tl"></div>
+                            <div class="hud-corner hud-tr"></div>
+                            <div class="hud-corner hud-bl"></div>
+                            <div class="hud-corner hud-br"></div>
+
+                            <!-- Imagen de Rostro de Muestra -->
+                            <img src="WhatsApp Image 2026-10-17 at 11.59.54 PM (1).jpeg" 
+                                 alt="Identificación Facial" 
+                                 class="w-full h-full object-cover object-center filter brightness-95 contrast-105">
+
+                            <!-- Superposición HUD de Puntos y Red Facial -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-darkBg/60 via-transparent to-transparent"></div>
+                            <div class="absolute inset-0 mesh-overlay"></div>
+
+                            <!-- Malla de Reconocimiento Facial SVG Simulado -->
+                            <svg class="absolute inset-0 w-full h-full text-cyan-400 opacity-80" viewBox="0 0 200 200" fill="none">
+                                <!-- Puntos de referencia del rostro -->
+                                <g class="stroke-cyan-400 stroke-[0.8] fill-cyan-300">
+                                    <!-- Ojo Izquierdo -->
+                                    <circle cx="80" cy="85" r="1.5" />
+                                    <circle cx="88" cy="83" r="1.5" />
+                                    <circle cx="96" cy="85" r="1.5" />
+                                    <!-- Ojo Derecho -->
+                                    <circle cx="116" cy="85" r="1.5" />
+                                    <circle cx="124" cy="83" r="1.5" />
+                                    <circle cx="132" cy="85" r="1.5" />
+                                    <!-- Nariz -->
+                                    <circle cx="106" cy="100" r="1.5" />
+                                    <circle cx="106" cy="112" r="1.5" />
+                                    <!-- Boca -->
+                                    <circle cx="92" cy="130" r="1.5" />
+                                    <circle cx="106" cy="132" r="1.5" />
+                                    <circle cx="120" cy="130" r="1.5" />
+                                    <circle cx="106" cy="138" r="1.5" />
+                                    <!-- Contorno Mandíbula -->
+                                    <circle cx="70" cy="100" r="1.5" />
+                                    <circle cx="75" cy="125" r="1.5" />
+                                    <circle cx="85" cy="148" r="1.5" />
+                                    <circle cx="106" cy="158" r="1.5" />
+                                    <circle cx="127" cy="148" r="1.5" />
+                                    <circle cx="137" cy="125" r="1.5" />
+                                    <circle cx="142" cy="100" r="1.5" />
+                                </g>
+                                <!-- Líneas de conexión -->
+                                <path d="M80 85 L88 83 L96 85 M116 85 L124 83 L132 85" stroke="#06B6D4" stroke-width="0.7"/>
+                                <path d="M96 85 L106 100 L116 85" stroke="#06B6D4" stroke-width="0.7"/>
+                                <path d="M106 100 L106 112 M92 130 L106 132 L120 130" stroke="#06B6D4" stroke-width="0.7"/>
+                                <path d="M92 130 Q106 142 120 130 Z" stroke="#06B6D4" stroke-width="0.7"/>
+                                <path d="M70 100 L75 125 L85 148 L106 158 L127 148 L137 125 L142 100" stroke="#06B6D4" stroke-width="0.7" stroke-dasharray="2 2"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Sección de Características / Servicios -->
+            <section id="servicios" class="px-6 md:px-12 py-12 md:py-16 bg-cardBg border-b border-slate-800/80">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-4xl mx-auto">
+                    
+                    <!-- Tarjeta 1: Detección Facial -->
+                    <div class="flex flex-col items-center text-center p-6 rounded-2xl bg-slate-900/40 border border-slate-800/50 hover:border-slate-700 transition-all">
+                        <div class="text-brandGreen text-4xl mb-4">
+                            <!-- Icono Detección Facial -->
+                            <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M9 3H5a2 2 0 0 0-2 2v4"></path>
+                                <path d="M15 3h4a2 2 0 0 1 2 2v4"></path>
+                                <path d="M9 21H5a2 2 0 0 1-2-2v-4"></path>
+                                <path d="M15 21h4a2 2 0 0 0 2-2v-4"></path>
+                                <circle cx="12" cy="11" r="3"></circle>
+                                <path d="M12 17c-2.5 0-4-1-4-1"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Detección Facial</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
+                            Identifica rostros en tiempo real con alta precisión.
+                        </p>
+                        <a href="#mas-deteccion" class="mt-auto bg-brandBlue hover:bg-brandBlueHover text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 btn-glow inline-flex items-center space-x-2">
+                            <span>Ver más</span>
+                            <span>&rarr;</span>
+                        </a>
+                    </div>
+
+                    <!-- Tarjeta 2: Seguridad Inteligente -->
+                    <div class="flex flex-col items-center text-center p-6 rounded-2xl bg-slate-900/40 border border-slate-800/50 hover:border-slate-700 transition-all">
+                        <div class="text-brandGreen text-4xl mb-4">
+                            <!-- Icono Escudo Seguridad -->
+                            <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Seguridad Inteligente</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
+                            Protege tu información con tecnología avanzada.
+                        </p>
+                        <a href="#mas-seguridad" class="mt-auto bg-brandBlue hover:bg-brandBlueHover text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 btn-glow inline-flex items-center space-x-2">
+                            <span>Ver más</span>
+                            <span>&rarr;</span>
+                        </a>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer id="contacto" class="px-6 md:px-12 py-6 bg-[#0B0F17] flex flex-col md:flex-row items-center justify-between text-xs text-gray-400 gap-4">
+                
+                <!-- Logo Footer -->
+                <div class="flex items-center space-x-2">
+                    <div class="text-brandGreen text-xl">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 3H5a2 2 0 0 0-2 2v4"></path>
+                            <path d="M15 3h4a2 2 0 0 1 2 2v4"></path>
+                            <path d="M9 21H5a2 2 0 0 1-2-2v-4"></path>
+                            <path d="M15 21h4a2 2 0 0 0 2-2v-4"></path>
+                            <circle cx="12" cy="11" r="2"></circle>
+                        </svg>
+                    </div>
+                    <span class="text-base font-bold text-white">FaceID</span>
+                </div>
+
+                <!-- Enlaces de navegación pie -->
+                <div class="flex items-center space-x-6">
+                    <a href="#inicio" class="hover:text-white transition-colors">Inicio</a>
+                    <a href="#servicios" class="hover:text-white transition-colors">Servicios</a>
+                    <a href="#contacto" class="hover:text-white transition-colors">Contacto</a>
+                </div>
+
+                <!-- Redes Sociales -->
+                <div class="flex items-center space-x-4 text-base">
+                    <a href="#" class="hover:text-brandBlue transition-colors" aria-label="Facebook">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="hover:text-brandCyan transition-colors" aria-label="Instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a href="#" class="hover:text-brandBlue transition-colors" aria-label="LinkedIn">
+                        <i class="fa-brands fa-linkedin-in"></i>
+                    </a>
+                </div>
+
+                <!-- Copyright -->
+                <div class="text-gray-500">
+                    &copy; 2026 FaceID. Todos los derechos reservados.
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+</body>
+</html>
